@@ -61,12 +61,24 @@ module Dynamoid
       #
       # @since 0.2.0
       def undump(incoming = nil)
-        incoming = (incoming || {}).symbolize_keys
+        incoming          = (incoming || {}).symbolize_keys
+        custom_attributes = []
+
         Hash.new.tap do |hash|
           self.attributes.each do |attribute, options|
-            hash[attribute] = undump_field(incoming[attribute], options)
+            # Respect custom attribute method names.
+            method_name       = options.fetch(:method_name, attribute)
+            custom_attributes << attribute if method_name != attribute
+            hash[method_name] = undump_field(incoming[attribute], options)
           end
-          incoming.each {|attribute, value| hash[attribute] = value unless hash.has_key? attribute }
+
+          incoming.each do |attribute, value|
+            # If an attribute was set using a custom attribute method name,
+            # we explicitly do not want to use the original attribute name which
+            # came from the database
+            next if custom_attributes.include?(attribute)
+            hash[attribute] = value unless hash.has_key? attribute
+          end
         end
       end
 

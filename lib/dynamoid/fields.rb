@@ -40,18 +40,26 @@ module Dynamoid #:nodoc:
       # @param [Symbol] name the name of the field
       # @param [Symbol] type the type of the field (refer to method description for details)
       # @param [Hash] options any additional options for the field
+      # @option options [String, Symbol] :method_name (nil)
+      #   A custom name for the generated methods. If none is given, the database field name is used instead.
+      #   Example: Generates the methods `a_different_name`, `a_different_name?` and `a_different_name=`
+      #     field(:a_field_name, :string, method_name: :a_different_name)
       #
       # @since 0.2.0
       def field(name, type = :string, options = {})
+        method_name = options.fetch(:method_name, name).to_s
         named = name.to_s
+
         if type == :float
           Dynamoid.logger.warn("Field type :float, which you declared for '#{name}', is deprecated in favor of :number.")
           type = :number
         end
         self.attributes = attributes.merge(name => {:type => type}.merge(options))
 
-        define_method(named) { read_attribute(named) }
-        define_method("#{named}?") do
+        puts "#{named} => #{method_name}"
+
+        define_method(method_name) { read_attribute(named) }
+        define_method("#{method_name}?") do
           value = read_attribute(named)
           case value
           when true        then true
@@ -60,7 +68,7 @@ module Dynamoid #:nodoc:
             !value.nil?
           end
         end
-        define_method("#{named}=") {|value| write_attribute(named, value) }
+        define_method("#{method_name}=") {|value| write_attribute(named, value) }
       end
 
       def range(name, type = :string)
