@@ -12,14 +12,22 @@ module Dynamoid #:nodoc:
       :datetime
     ]
 
-    # Initialize the attributes we know the class has, in addition to our magic attributes: id, created_at, and updated_at.
+    # Initialize the attributes we know the class has,
+    # in addition to our magic attributes: id, created_at, and updated_at.
+    # Some magic attributes may only be initialized if the user
+    # enabled them through the Dynamoid config
     included do
       class_attribute :attributes
       class_attribute :range_key
 
       self.attributes = {}
-      field :created_at, :datetime
-      field :updated_at, :datetime
+
+      # Only add magical timestamp attributes if the user enabled
+      # them through the Dynamoid config
+      if Dynamoid::Config.timestamps
+        field :created_at, :datetime
+        field :updated_at, :datetime
+      end
 
       field :id #Default primary key
     end
