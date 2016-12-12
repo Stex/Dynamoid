@@ -64,8 +64,6 @@ module Dynamoid #:nodoc:
         end
         self.attributes = attributes.merge(name => {:type => type}.merge(options))
 
-        puts "#{named} => #{method_name}"
-
         define_method(method_name) { read_attribute(named) }
         define_method("#{method_name}?") do
           value = read_attribute(named)
